@@ -1,0 +1,9 @@
+<p>board works!</p>
+
+<div class="container">
+  <ng-template ngFor let-row [ngForOf]="board" let-y="index">
+    <ng-template ngFor let-cell [ngForOf]="row" let-x="index" >
+      <app-piece [x]="cell.x" [y]="cell.y" [state]="cell.state"></app-piece>
+    </ng-template>
+  </ng-template>
+</div>
