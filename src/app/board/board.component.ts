@@ -11,12 +11,13 @@ import { MessageConst, StateEnum } from '../stateenum';
 export class BoardComponent implements OnInit {
 
   turnMessage: string = MessageConst.BLACK_TURN;
-  stateMessage: string = "";
-
+  stateMessage = "";
   turn: StateEnum = StateEnum.BLACK;
-
   board: Piece[][] = [];
 
+  /**
+   * 初期化
+   */
   ngOnInit(): void {
     for (let i = 0; i < 8; i++) {
       this.board[i] = [];
@@ -30,6 +31,10 @@ export class BoardComponent implements OnInit {
     this.board[4][4].state = StateEnum.BLACK;
   }
 
+  /**
+   * 石を置ける場所を選択された際のハンドラ
+   * @param piece
+   */
   select(piece: Piece): void {
     console.log(`BoardComponent (x, y)=(${piece.x}, ${piece.y})`);
 
@@ -43,14 +48,66 @@ export class BoardComponent implements OnInit {
       this.flipPiece(piece);
       // 黒と白の交代
       this.changeTurn();
+      // 石を置ける場所がどこかにあるか確認しどこにもなければパスする
+      if (!this.canPutAll()) {
+        console.log("石を置く場所がどこにもないのでパス", this.turn);
+        this.changeTurn();
+        if (!this.canPutAll()) {
+          console.log("石を置く場所がどこにもないのでゲーム終了", this.turn);
+          this.turnMessage = MessageConst.GAME_OVER;
+          this.countPieces();
+        }
+      }
     } else {
       console.log('can not put');
       this.stateMessage = MessageConst.CANNOT_PUT;
     }
-
   }
 
-  changeTurn(): void {
+  private countPieces(): void {
+    let numBlack = 0;
+    let numWhite = 0;
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const state = this.board[i][j].state;
+        if (state === StateEnum.BLACK) {
+          numBlack++;
+        } else if (state === StateEnum.WHITE) {
+          numWhite++;
+        }
+      }
+    }
+    let wonMessage: string;
+    if (numWhite < numBlack) {
+      wonMessage = "黒の勝ち。";
+    } else if (numBlack < numWhite) {
+      wonMessage = "白の勝ち。";
+    } else {
+      wonMessage = "同点。"
+    }
+    this.stateMessage = `黒${numBlack} - 白${numWhite}。${wonMessage}`;
+  }
+
+  /**
+   * 石を置ける場所があるか判定する
+   */
+  private canPutAll(): boolean {
+    console.log("canPutAll");
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        if (this.canPut(new Piece(i, j))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 黒と白の手番を変える
+   */
+  private changeTurn(): void {
+    console.log("changeTurn");
     if (this.turn === StateEnum.BLACK) {
       this.turn = StateEnum.WHITE;
       this.turnMessage = MessageConst.WHITE_TURN;
@@ -60,7 +117,19 @@ export class BoardComponent implements OnInit {
     }
   }
 
-  canPut(piece: Piece): boolean {
+  /**
+   * 石が置けるか判定する
+   * @param piece
+   * @returns
+   */
+  private canPut(piece: Piece): boolean {
+    console.log("canPut");
+
+    // すでに石がある場所には置けない
+    if (this.board[piece.x][piece.y] && this.board[piece.x][piece.y].state !== StateEnum.NONE) {
+      return false;
+    }
+
     // 置こうとしている場所の周囲8方向を探索
     for (let i = -1; i < 2; i++) {
       for (let j = -1; j < 2; j++) {
@@ -78,7 +147,14 @@ export class BoardComponent implements OnInit {
     return false;
   }
 
-  canPutForDirection(piece: Piece, xDirection: number, yDirection: number): boolean {
+  /**
+   * 指定された方向で挟めるか判定する
+   * @param piece
+   * @param xDirection
+   * @param yDirection
+   * @returns
+   */
+  private canPutForDirection(piece: Piece, xDirection: number, yDirection: number): boolean {
     // 隣りの石の座標
     const nextX = piece.x + xDirection;
     const nextY = piece.y + yDirection;
@@ -99,6 +175,11 @@ export class BoardComponent implements OnInit {
     let beyondX = piece.x + xDirection * time;
     let beyondY = piece.y + yDirection * time;
     while(this.insideBoard(beyondX, beyondY)) {
+      // 途中に意思がない場所があったら置けないと判断
+      if (!this.board[beyondX][beyondY] || this.board[beyondX][beyondY].state === StateEnum.NONE) {
+        return false;
+      }
+      // 延長線上に自分の意思がある場合は置けると判断
       if (this.board[beyondX][beyondY].state === this.turn) {
         return true;
       }
@@ -110,7 +191,11 @@ export class BoardComponent implements OnInit {
     return false;
   }
 
-  flipPiece(piece: Piece): void {
+  /**
+   * 挟んでいる石を裏返す
+   * @param piece
+   */
+  private flipPiece(piece: Piece): void {
     // 置こうとしている場所の周囲8方向を探索
     for (let i = -1; i < 2; i++) {
       for (let j = -1; j < 2; j++) {
@@ -124,7 +209,14 @@ export class BoardComponent implements OnInit {
     }
   }
 
-  flipForDirection(piece: Piece, xDirection: number, yDirection: number): void {
+  /**
+   * 特定の方向で挟んでいる石を裏返す
+   * @param piece
+   * @param xDirection
+   * @param yDirection
+   * @returns
+   */
+  private flipForDirection(piece: Piece, xDirection: number, yDirection: number): void {
     const canPut = this.canPutForDirection(piece, xDirection, yDirection);
     if (!canPut) {
       return;
@@ -155,7 +247,7 @@ export class BoardComponent implements OnInit {
    * @param y
    * @returns
    */
-  insideBoard(x: number, y: number): boolean {
+  private insideBoard(x: number, y: number): boolean {
     if (x < 0 || 7 < x || y < 0 || 7 < y) {
       return false;
     }

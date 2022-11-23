@@ -19,7 +19,7 @@ export class PieceComponent {
   state: StateEnum;
 
   @Output()
-  onSelect = new EventEmitter<Piece>();
+  selectEvent = new EventEmitter<Piece>();
 
   constructor() {
     this.x = 0;
@@ -46,6 +46,6 @@ export class PieceComponent {
   }
 
   select(): void {
-    this.onSelect.emit(this);
+    this.selectEvent.emit(this);
   }
 }

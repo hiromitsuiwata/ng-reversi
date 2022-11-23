@@ -3,7 +3,7 @@
 <div class="container">
   <ng-template ngFor let-row [ngForOf]="board" let-y="index">
     <ng-template ngFor let-piece [ngForOf]="row" let-x="index" >
-      <app-piece [x]="piece.x" [y]="piece.y" [state]="piece.state" (onSelect)="select(piece)"></app-piece>
+      <app-piece [x]="piece.x" [y]="piece.y" [state]="piece.state" (selectEvent)="select(piece)"></app-piece>
     </ng-template>
   </ng-template>
 </div>
