@@ -1,4 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Piece } from '../piece';
 import { StateEnum } from '../stateenum';
 
 @Component({
@@ -16,6 +17,9 @@ export class PieceComponent {
 
   @Input()
   state: StateEnum;
+
+  @Output()
+  onSelect = new EventEmitter<Piece>();
 
   constructor() {
     this.x = 0;
@@ -39,5 +43,9 @@ export class PieceComponent {
     } else {
       return "transparent";
     }
+  }
+
+  select(): void {
+    this.onSelect.emit(this);
   }
 }
