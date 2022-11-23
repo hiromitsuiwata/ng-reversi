@@ -25,10 +25,10 @@ export class BoardComponent implements OnInit {
         this.board[i][j] = new Piece(i, j);
       }
     }
-    this.board[3][4].state = StateEnum.WHITE;
-    this.board[4][3].state = StateEnum.WHITE;
+    this.board[3][4].state = StateEnum.BLACK;
+    this.board[4][3].state = StateEnum.BLACK;
     this.board[3][3].state = StateEnum.WHITE;
-    this.board[4][4].state = StateEnum.BLACK;
+    this.board[4][4].state = StateEnum.WHITE;
   }
 
   /**
@@ -36,11 +36,8 @@ export class BoardComponent implements OnInit {
    * @param piece
    */
   select(piece: Piece): void {
-    console.log(`Turn: ${this.turn}`);
-    console.log(`BoardComponent (x, y)=(${piece.x}, ${piece.y})`);
 
     if (this.canPut(piece)) {
-      console.log('canPut');
       this.stateMessage = ""
       // 新しく石を置く
       piece.state = this.turn;
@@ -60,7 +57,6 @@ export class BoardComponent implements OnInit {
         }
       }
     } else {
-      console.log('can not put');
       this.stateMessage = MessageConst.CANNOT_PUT;
     }
   }
@@ -70,21 +66,20 @@ export class BoardComponent implements OnInit {
         return;
       }
 
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 700));
 
       // 石を置ける可能性がある箇所をリストアップする
       const candidates = this.canPutAll();
       // 置ける可能性のある個所からランダムで1つを選択する
       const floor = Math.floor(Math.random() * candidates.length);
-      console.log(`length: ${candidates.length}, floor: ${floor}`);
 
+      // 置く場所がない場合は何も置かずにreturn
       if (candidates.length === 0) {
         return;
       }
 
       const piece = candidates[floor];
       // 石を置く
-      console.log("敵が石を置く");
       this.select(piece);
   }
 
@@ -116,7 +111,6 @@ export class BoardComponent implements OnInit {
    * 石を置ける場所があるか判定する
    */
   private canPutAll(): Piece[] {
-    console.log("canPutAll");
     const candidates: Piece[] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -153,8 +147,6 @@ export class BoardComponent implements OnInit {
    * @returns
    */
   private canPut(piece: Piece): boolean {
-    console.log("canPut");
-
     // すでに石がある場所には置けない
     if (this.board[piece.x][piece.y] && this.board[piece.x][piece.y].state !== StateEnum.NONE) {
       return false;
