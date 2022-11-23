@@ -27,7 +27,7 @@ export class BoardComponent implements OnInit {
     }
     this.board[3][4].state = StateEnum.WHITE;
     this.board[4][3].state = StateEnum.WHITE;
-    this.board[3][3].state = StateEnum.BLACK;
+    this.board[3][3].state = StateEnum.WHITE;
     this.board[4][4].state = StateEnum.BLACK;
   }
 
@@ -36,6 +36,7 @@ export class BoardComponent implements OnInit {
    * @param piece
    */
   select(piece: Piece): void {
+    console.log(`Turn: ${this.turn}`);
     console.log(`BoardComponent (x, y)=(${piece.x}, ${piece.y})`);
 
     if (this.canPut(piece)) {
@@ -49,10 +50,10 @@ export class BoardComponent implements OnInit {
       // 黒と白の交代
       this.changeTurn();
       // 石を置ける場所がどこかにあるか確認しどこにもなければパスする
-      if (!this.canPutAll()) {
+      if (this.canPutAll().length === 0) {
         console.log("石を置く場所がどこにもないのでパス", this.turn);
         this.changeTurn();
-        if (!this.canPutAll()) {
+        if (this.canPutAll().length === 0) {
           console.log("石を置く場所がどこにもないのでゲーム終了", this.turn);
           this.turnMessage = MessageConst.GAME_OVER;
           this.countPieces();
@@ -62,6 +63,29 @@ export class BoardComponent implements OnInit {
       console.log('can not put');
       this.stateMessage = MessageConst.CANNOT_PUT;
     }
+  }
+
+  private async selectByEnemy(): Promise<void> {
+      if (this.turn === StateEnum.BLACK) {
+        return;
+      }
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      // 石を置ける可能性がある箇所をリストアップする
+      const candidates = this.canPutAll();
+      // 置ける可能性のある個所からランダムで1つを選択する
+      const floor = Math.floor(Math.random() * candidates.length);
+      console.log(`length: ${candidates.length}, floor: ${floor}`);
+
+      if (candidates.length === 0) {
+        return;
+      }
+
+      const piece = candidates[floor];
+      // 石を置く
+      console.log("敵が石を置く");
+      this.select(piece);
   }
 
   private countPieces(): void {
@@ -91,16 +115,18 @@ export class BoardComponent implements OnInit {
   /**
    * 石を置ける場所があるか判定する
    */
-  private canPutAll(): boolean {
+  private canPutAll(): Piece[] {
     console.log("canPutAll");
+    const candidates: Piece[] = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        if (this.canPut(new Piece(i, j))) {
-          return true;
+        const piece = new Piece(i, j);
+        if (this.canPut(piece)) {
+          candidates.push(piece);
         }
       }
     }
-    return false;
+    return candidates;
   }
 
   /**
@@ -115,6 +141,10 @@ export class BoardComponent implements OnInit {
       this.turn = StateEnum.BLACK;
       this.turnMessage = MessageConst.BLACK_TURN;
     }
+    console.log(`次は${this.turn}です`);
+
+    // 相手が石を置く
+    this.selectByEnemy();
   }
 
   /**
